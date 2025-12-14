@@ -34,10 +34,52 @@ const getEmptySquares = (board: Board): number[] => {
   return board.map((val, idx) => val === null ? idx : -1).filter(idx => idx !== -1);
 };
 
-// Easy AI: makes random moves
-const getEasyMove = (board: Board): number => {
+// Minimax algorithm for unbeatable AI
+const minimax = (board: Board, isMaximizing: boolean): number => {
+  const winner = checkWinner(board);
+  if (winner === 'O') return 10;
+  if (winner === 'X') return -10;
+  if (getEmptySquares(board).length === 0) return 0;
+
   const emptySquares = getEmptySquares(board);
-  return emptySquares[Math.floor(Math.random() * emptySquares.length)];
+  
+  if (isMaximizing) {
+    let bestScore = -Infinity;
+    for (const idx of emptySquares) {
+      board[idx] = 'O';
+      const score = minimax(board, false);
+      board[idx] = null;
+      bestScore = Math.max(score, bestScore);
+    }
+    return bestScore;
+  } else {
+    let bestScore = Infinity;
+    for (const idx of emptySquares) {
+      board[idx] = 'X';
+      const score = minimax(board, true);
+      board[idx] = null;
+      bestScore = Math.min(score, bestScore);
+    }
+    return bestScore;
+  }
+};
+
+// Hard AI: uses minimax for optimal moves
+const getHardMove = (board: Board): number => {
+  const emptySquares = getEmptySquares(board);
+  let bestMove = emptySquares[0];
+  let bestScore = -Infinity;
+
+  for (const idx of emptySquares) {
+    board[idx] = 'O';
+    const score = minimax(board, false);
+    board[idx] = null;
+    if (score > bestScore) {
+      bestScore = score;
+      bestMove = idx;
+    }
+  }
+  return bestMove;
 };
 
 interface SquareProps {
@@ -91,7 +133,7 @@ const TicTacToe = () => {
   useEffect(() => {
     if (!isPlayerTurn && !gameOver) {
       const timer = setTimeout(() => {
-        const move = getEasyMove(board);
+        const move = getHardMove([...board]);
         if (move !== undefined) {
           makeMove(move, 'O');
         }
